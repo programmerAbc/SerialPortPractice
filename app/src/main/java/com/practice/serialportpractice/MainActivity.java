@@ -16,6 +16,11 @@ public class MainActivity extends AppCompatActivity {
         serialPortHelper = new SerialPortHelper("/dev/ttyS9", 115200);
         serialPortHelper.setCallback(new SerialPortHelper.Callback() {
             @Override
+            public void haveSendCmd(SerialPortHelper.Cmd cmd) {
+
+            }
+
+            @Override
             public void openSuccess() {
 
             }
@@ -36,5 +41,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         serialPortHelper.open();
+        serialPortHelper.sendCmd(new SerialPortHelper.Cmd.Builder().build());
+    }
+
+    @Override
+    protected void onDestroy() {
+        serialPortHelper.close();
+        super.onDestroy();
     }
 }

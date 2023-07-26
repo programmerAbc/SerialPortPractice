@@ -54,7 +54,7 @@ public class SerialPortHelper {
 
     Callback callback;
 
-    public void stopWrite() {
+    private void stopWrite() {
         sleepLock.lock();
         stopWrite = true;
         sleepCondition.signalAll();
@@ -62,7 +62,7 @@ public class SerialPortHelper {
         sendCmd(new Cmd.Builder().data(Unpooled.buffer()).clearQueue(true).interval(0).extra("").build());
     }
 
-    public void stopRead() {
+    private void stopRead() {
         readLock.lock();
         stopRead = true;
         readCondition.signalAll();
@@ -160,6 +160,11 @@ public class SerialPortHelper {
                             skipReadWait = true;
                             readCondition.signalAll();
                             readLock.unlock();
+                            try {
+                                callback.haveSendCmd(cmdToSend);
+                            } catch (Exception e) {
+
+                            }
                             Log.e(TAG, "weigher: >>>" + Utils.bytesToHex(bytesToSend));
                         }
                     } catch (Exception e) {
@@ -231,9 +236,9 @@ public class SerialPortHelper {
                 if (!opened) return;
                 opened = false;
                 _close();
-                try{
+                try {
                     callback.closed();
-                }catch (Exception e){
+                } catch (Exception e) {
 
                 }
             }
@@ -366,6 +371,9 @@ public class SerialPortHelper {
 
 
     public interface Callback {
+
+        void haveSendCmd(Cmd cmd);
+
         void openSuccess();
 
         void openFailed(String msg);
