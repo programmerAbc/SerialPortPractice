@@ -90,6 +90,7 @@ public class SerialPortHelper {
             super.run();
             try {
                 while (true) {
+                    readPool.discardReadBytes();
                     while (!stopRead) {
                         int readLength = 0;
                         if (mFileInputStream.available() > 0) {
