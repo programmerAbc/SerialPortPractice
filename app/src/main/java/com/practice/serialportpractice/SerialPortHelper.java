@@ -184,9 +184,9 @@ public class SerialPortHelper {
                         readLength = mFileInputStream.read(buffer);
                     }
                     if (readLength > 0) {
-                        log("[SerialPortHelper][ READ]" + Utils.bytesToHex(buffer, 0, readLength));
                         byte[] data = new byte[readLength];
                         System.arraycopy(buffer, 0, data, 0, data.length);
+                        log("[SerialPortHelper][ READ]" + Utils.bytesToHex(data));
                         submitConsumeData(new ConsumeData.Builder()
                                 .data(data)
                                 .exitSignal(false)
