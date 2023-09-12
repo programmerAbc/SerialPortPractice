@@ -15,28 +15,29 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         serialPortHelper = new SerialPortHelper("/dev/ttyS9", 115200);
         serialPortHelper.setCallback(new SerialPortHelper.Callback() {
+
             @Override
             public void haveSendCmd(SerialPortHelper.Cmd cmd) {
 
             }
 
             @Override
-            public void openSuccess() {
+            public void onOpenSuccess() {
 
             }
 
             @Override
-            public void openFailed(String msg) {
+            public void onOpenFailed(String msg) {
 
             }
 
             @Override
-            public void receiveData(ByteBuf readPool) {
+            public void onReceiveData(ByteBuf readPool) {
 
             }
 
             @Override
-            public void closed() {
+            public void onClosed() {
 
             }
         });

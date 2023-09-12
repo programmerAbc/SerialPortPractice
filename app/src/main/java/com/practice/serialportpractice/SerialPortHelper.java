@@ -1,6 +1,7 @@
 package com.practice.serialportpractice;
 
 import android.serialport.SerialPort;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
@@ -49,7 +50,7 @@ public class SerialPortHelper {
     ReentrantLock consumeLock = new ReentrantLock();
     Condition consumeCondition = consumeLock.newCondition();
     private ByteBuf readPool = Unpooled.buffer();
-
+    boolean showLog = false;
 
     private Cmd cmdToSend = null;
     private byte[] bytesToSend = null;
@@ -57,6 +58,20 @@ public class SerialPortHelper {
     public SerialPortHelper(String serialPort, int baudrate) {
         this.serialPort = serialPort;
         this.baudrate = baudrate;
+    }
+
+    public boolean isShowLog() {
+        return showLog;
+    }
+
+    public void setShowLog(boolean showLog) {
+        this.showLog = showLog;
+    }
+
+    private void log(String str) {
+        if (!showLog) return;
+        if (TextUtils.isEmpty(str)) return;
+        Log.e(TAG, str);
     }
 
     public void setCallback(Callback callback) {
@@ -169,7 +184,7 @@ public class SerialPortHelper {
                         readLength = mFileInputStream.read(buffer);
                     }
                     if (readLength > 0) {
-                        Log.e(TAG, "SerialPortHelper: <<<" + Utils.bytesToHex(buffer, 0, readLength));
+                        log("[SerialPortHelper][ READ]" + Utils.bytesToHex(buffer, 0, readLength));
                         byte[] data = new byte[readLength];
                         System.arraycopy(buffer, 0, data, 0, data.length);
                         submitConsumeData(new ConsumeData.Builder()
@@ -233,7 +248,7 @@ public class SerialPortHelper {
                             } catch (Exception e) {
 
                             }
-                            Log.e(TAG, "weigher: >>>" + Utils.bytesToHex(bytesToSend));
+                            log("[SerialPortHelper][WRITE]" + Utils.bytesToHex(bytesToSend));
                         }
                     } catch (Exception e) {
 
@@ -294,7 +309,7 @@ public class SerialPortHelper {
                         break;
                     }
                     try {
-                        callback.receiveData(readPool);
+                        callback.onReceiveData(readPool);
                     } catch (Exception e) {
 
                     }
@@ -322,7 +337,7 @@ public class SerialPortHelper {
                     _open();
                     opened = true;
                     try {
-                        callback.openSuccess();
+                        callback.onOpenSuccess();
                     } catch (Exception e) {
 
                     }
@@ -330,7 +345,7 @@ public class SerialPortHelper {
                     opened = false;
                     _close();
                     try {
-                        callback.openFailed("串口打开失败:" + Log.getStackTraceString(e));
+                        callback.onOpenFailed("串口打开失败:" + Log.getStackTraceString(e));
                     } catch (Exception ex) {
 
                     }
@@ -347,7 +362,7 @@ public class SerialPortHelper {
                 opened = false;
                 _close();
                 try {
-                    callback.closed();
+                    callback.onClosed();
                 } catch (Exception e) {
 
                 }
@@ -497,13 +512,13 @@ public class SerialPortHelper {
 
         void haveSendCmd(Cmd cmd);
 
-        void openSuccess();
+        void onOpenSuccess();
 
-        void openFailed(String msg);
+        void onOpenFailed(String msg);
 
-        void receiveData(ByteBuf readPool);
+        void onReceiveData(ByteBuf readPool);
 
-        void closed();
+        void onClosed();
     }
 
 
