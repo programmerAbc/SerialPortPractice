@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
         serialPortHelper.setCallback(new SerialPortHelper.Callback() {
 
             @Override
-            public void haveSendCmd(SerialPortHelper.Cmd cmd) {
+            public void willSendCmd(SerialPortHelper.Cmd cmd) {
 
             }
 

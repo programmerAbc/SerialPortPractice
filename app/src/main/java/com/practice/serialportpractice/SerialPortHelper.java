@@ -9,10 +9,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayDeque;
 import java.util.LinkedList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -239,15 +237,16 @@ public class SerialPortHelper {
                             ByteBuf slice = cmdToSend.getData().slice();
                             bytesToSend = new byte[slice.readableBytes()];
                             slice.readBytes(bytesToSend);
+                            try {
+                                callback.willSendCmd(cmdToSend);
+                            } catch (Exception e) {
+
+                            }
                             mFileOutputStream.write(bytesToSend);
                             skipReadWait = true;
                             readCondition.signalAll();
                             readLock.unlock();
-                            try {
-                                callback.haveSendCmd(cmdToSend);
-                            } catch (Exception e) {
 
-                            }
                             log("[SerialPortHelper][WRITE]" + Utils.bytesToHex(bytesToSend));
                         }
                     } catch (Exception e) {
@@ -510,7 +509,7 @@ public class SerialPortHelper {
 
     public interface Callback {
 
-        void haveSendCmd(Cmd cmd);
+        void willSendCmd(Cmd cmd);
 
         void onOpenSuccess();
 
