@@ -542,6 +542,60 @@ public class SerialPortHelper {
         public static String bytesToHex(byte[] bytes) {
             return bytesToHex(bytes, 0, bytes.length);
         }
+
+
+        public static int findPatternInBytes(byte[] bytes, int offset, int length, byte[] pattern) {
+            try {
+                int upLimit = offset + length;
+                if (offset < 0) throw new Exception();
+                if (length < 0) throw new Exception();
+                if (bytes == null || bytes.length == 0) throw new Exception();
+                if (pattern == null || pattern.length == 0) throw new Exception();
+                if (offset >= bytes.length) throw new Exception();
+                if (bytes.length < upLimit) throw new Exception();
+                int index = -1;
+
+                outLoop:
+                for (int i = offset; i < upLimit; ++i) {
+                    for (int j = 0; j < pattern.length; ++j) {
+                        if ((i + j) >= upLimit) break;
+                        if (bytes[i + j] != pattern[j]) {
+                            continue outLoop;
+                        }
+                    }
+                    index = i;
+                    break;
+                }
+                return index;
+            } catch (Exception e) {
+                return -1;
+            }
+        }
+
+        public static int findPatternInByteBuf(ByteBuf byteBuf, byte[] pattern) {
+            try {
+                if (byteBuf == null || byteBuf.readableBytes() == 0) throw new Exception();
+                if (pattern == null || pattern.length == 0) throw new Exception();
+                ByteBuf slice = byteBuf.slice();
+                int index = -1;
+                int readableBytes = slice.readableBytes();
+                outLoop:
+                for (int i = 0; i < readableBytes; ++i) {
+                    for (int j = 0; j < pattern.length; ++j) {
+                        if ((i + j) >= readableBytes) break;
+                        if (slice.getByte(i + j) != pattern[j]) {
+                            continue outLoop;
+                        }
+                    }
+                    index = i;
+                    break;
+                }
+                return index;
+            } catch (Exception e) {
+                return -1;
+            }
+        }
+
     }
 
     public static class ConsumeData {
@@ -594,55 +648,5 @@ public class SerialPortHelper {
             }
         }
     }
-    public static int findPatternInBytes(byte[] bytes, int offset, int length, byte[] pattern) {
-        try {
-            int upLimit = offset + length;
-            if (offset < 0) throw new Exception();
-            if (length < 0) throw new Exception();
-            if (bytes == null || bytes.length == 0) throw new Exception();
-            if (pattern == null || pattern.length == 0) throw new Exception();
-            if (offset >= bytes.length) throw new Exception();
-            if (bytes.length < upLimit) throw new Exception();
-            int index = -1;
 
-            outLoop:
-            for (int i = offset; i < upLimit; ++i) {
-                for (int j = 0; j < pattern.length; ++j) {
-                    if ((i + j) >= upLimit) break;
-                    if (bytes[i + j] != pattern[j]) {
-                        continue outLoop;
-                    }
-                }
-                index = i;
-                break;
-            }
-            return index;
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-    public static int findPatternInByteBuf(ByteBuf byteBuf, byte[] pattern) {
-        try {
-            if (byteBuf == null || byteBuf.readableBytes() == 0) throw new Exception();
-            if (pattern == null || pattern.length == 0) throw new Exception();
-            ByteBuf slice = byteBuf.slice();
-            int index = -1;
-            int readableBytes = slice.readableBytes();
-            outLoop:
-            for (int i = 0; i < readableBytes; ++i) {
-                for (int j = 0; j < pattern.length; ++j) {
-                    if ((i + j) >= readableBytes) break;
-                    if (slice.getByte(i + j) != pattern[j]) {
-                        continue outLoop;
-                    }
-                }
-                index = i;
-                break;
-            }
-            return index;
-        } catch (Exception e) {
-            return -1;
-        }
-    }
 }
