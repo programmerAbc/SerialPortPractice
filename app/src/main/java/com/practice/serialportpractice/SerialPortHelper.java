@@ -12,7 +12,6 @@ import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -38,7 +37,6 @@ public class SerialPortHelper {
     Condition readCondition = readLock.newCondition();
     //WRITE
     boolean stopWrite = false;
-    AtomicBoolean waitTrig = new AtomicBoolean(false);
     ArrayDeque<Cmd> cmdQueue = new ArrayDeque<>();
     ReentrantLock writeLock = new ReentrantLock();
     Condition writeCondition = writeLock.newCondition();
@@ -51,30 +49,13 @@ public class SerialPortHelper {
     Condition consumeCondition = consumeLock.newCondition();
     private ByteBuf readPool = Unpooled.buffer();
     boolean showLog = false;
-    boolean triggerMode = false;
+
     private Cmd cmdToSend = null;
     private byte[] bytesToSend = null;
-    long trigTimeout = 5000;
 
     public SerialPortHelper(String serialPort, int baudrate) {
         this.serialPort = serialPort;
         this.baudrate = baudrate;
-    }
-
-    public boolean isTriggerMode() {
-        return triggerMode;
-    }
-
-    public void setTriggerMode(boolean triggerMode) {
-        this.triggerMode = triggerMode;
-    }
-
-    public long getTrigTimeout() {
-        return trigTimeout;
-    }
-
-    public void setTrigTimeout(long trigTimeout) {
-        this.trigTimeout = trigTimeout;
     }
 
     public boolean isShowLog() {
@@ -188,24 +169,6 @@ public class SerialPortHelper {
         }
     }
 
-    public void trig() {
-
-        try {
-            sleepLock.lock();
-        } catch (Exception e) {
-
-        }
-        waitTrig.set(false);
-        try {
-            sleepCondition.signalAll();
-        } catch (Exception e) {
-
-        }
-        try {
-            sleepLock.unlock();
-        } catch (Exception e) {
-        }
-    }
 
     class ReadThread extends Thread {
 
@@ -279,14 +242,6 @@ public class SerialPortHelper {
                             } catch (Exception e) {
 
                             }
-
-                            if (triggerMode) {
-                                sleepLock.lock();
-                                waitTrig.set(true);
-                                sleepLock.unlock();
-                            }
-
-
                             mFileOutputStream.write(bytesToSend);
                             skipReadWait = true;
                             readCondition.signalAll();
@@ -295,28 +250,13 @@ public class SerialPortHelper {
                             log("[SerialPortHelper][WRITE]" + Utils.bytesToHex(bytesToSend));
                         }
                     } catch (Exception e) {
-                        if (triggerMode) {
-                            try {
-                                sleepLock.lock();
-                                waitTrig.set(false);
-                                sleepLock.unlock();
-                            } catch (Exception ex) {
 
-                            }
-                        }
                     }
-                    if (!triggerMode) {
-                        if (cmdToSend.getInterval() > 0) {
-                            sleepLock.lock();
-                            if (!stopWrite) {
-                                sleepCondition.await(cmdToSend.getInterval(), TimeUnit.MILLISECONDS);
-                            }
-                            sleepLock.unlock();
-                        }
-                    } else {
+
+                    if (cmdToSend.getInterval() > 0) {
                         sleepLock.lock();
-                        if (!stopWrite && waitTrig.get()) {
-                            sleepCondition.await(trigTimeout, TimeUnit.MILLISECONDS);
+                        if (!stopWrite) {
+                            sleepCondition.await(cmdToSend.getInterval(), TimeUnit.MILLISECONDS);
                         }
                         sleepLock.unlock();
                     }
